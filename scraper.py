@@ -69,6 +69,8 @@ def process_dataset_xml(xml_content, csv_filename):
 def make_request(xml_link):
     response = requests.get(xml_link, timeout=5)
     response.raise_for_status()  # Raise an error for bad responses (4xx and 5xx)
+    # override encoding by real educated guess as provided by chardet
+    response.encoding = response.apparent_encoding
     logging.info(f"Successfully fetched XML content from {xml_link}")
     return response
 
@@ -177,7 +179,8 @@ if __name__ == "__main__":
     for i, comunicazione in enumerate(tqdm(input_root.findall("comunicazione"))):
         try:
             cf_ente = comunicazione.find("codiceFiscale").text.strip()
-            name_ente = comunicazione.find("ragioneSociale").text.strip()
+            name_ente = comunicazione.find("ragioneSociale").text
+            name_ente = name_ente.strip() if name_ente is not None else ""
             url = comunicazione.find("url").text.strip()
         except Exception as e:
             logging.error(f"Error processing comunicazione {i}: {e}")
