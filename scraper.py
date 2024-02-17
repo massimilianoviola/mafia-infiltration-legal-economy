@@ -52,14 +52,16 @@ def parse_lotto_xml(xml_content):
         return None
 
 
-def process_dataset_xml(xml_content, csv_filename):
+def process_dataset_xml(xml_content, csv_filename, parent_xml_link):
     """Parse a collection XML file that links to the standard lotto XMLs."""
     try:
         root = ET.fromstring(xml_content)
         links = [link.text for link in root.findall(".//linkDataset")]
         # Process each linked lotto XML file
         for link in links:
-            process_xml_link(link, csv_filename)
+            # Avoid looping
+            if link != parent_xml_link:
+                process_xml_link(link, csv_filename)
     except ET.ParseError as e:
         logging.error(f"Error parsing collection XML: {e}")
         return None
@@ -93,7 +95,7 @@ def process_xml_link(xml_link, csv_filename):
             parsed_data = parse_lotto_xml(xml_content)
         elif root.find(".//dataset") is not None:
             # Process as the second type of XML with dataset elements containing links
-            parsed_data = process_dataset_xml(xml_content, csv_filename)
+            parsed_data = process_dataset_xml(xml_content, csv_filename, xml_link)
         else:
             logging.error(f"Unknown XML structure in {xml_link}")
             return
@@ -171,7 +173,6 @@ if __name__ == "__main__":
     )
     # Load the XML file
     input_tree = ET.parse(args.input_filename)
-    # Load the XML file
     input_root = input_tree.getroot()
     match = re.search(r"l190-(\d{4})\.xml", args.input_filename)
     if match:
