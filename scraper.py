@@ -83,7 +83,7 @@ def process_xml_link(xml_link, csv_filename):
     """
     try:
         response = make_request(xml_link)
-    except requests.exceptions.RequestException as e:
+    except (requests.exceptions.RequestException, Exception) as e:
         logging.error(f"Error accessing {xml_link}: {e}")
         return 1
     try:
